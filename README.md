@@ -1,4 +1,4 @@
-# py-wordstress
+# wordstress
 
 Wordstress is an opensource whitebox security scanner for wordpress powered websites. T
 

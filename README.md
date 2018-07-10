@@ -127,4 +127,5 @@ Todo developement items:
 * Integrate wpvulndb vulnerability lookups for themes.
 * Writing json output to a flat file for indexing into other logging solutions.
 * GELF Forwarder for Graylog
+* Debug Logging
 * packaging for `pip` ?

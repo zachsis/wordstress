@@ -35,6 +35,91 @@ pip install requests
 pip install BeautifulSoup4
 ```
 
+### Sample output
+
+```
+{
+	"themes": {
+		"sometheme": {
+			"version": "1.0",
+			"themestatus": "inactive",
+			"themepath": "sometheme"
+		}
+	},
+	"confirmed_vulns": {
+		"coreversion": [{
+			"title": "WordPress <= x.x.x - Application Denial of Service (DoS) (unpatched)",
+			"created_at": "2018-02-05T16:50:40.000Z",
+			"updated_at": "2018-02-08T08:18:56.000Z",
+			"vuln_type": "DOS",
+			"references": {
+				"url": [
+					"https://thehackernews.com/..."
+				],
+				"cve": [
+					"2018-6389"
+				]
+			},
+			"published_date": "2017-02-05T00:00:00.000Z",
+			"fixed_in": null,
+			"id": 1111
+		}]
+	},
+	"published_date": "2018-06-27T00:00:00.000Z",
+	"fixed_in": "1.2.3",
+	"id": 1111,
+	"site": "www.yoursite.com/blog/",
+	"wp_version": {
+		"vulnerabilities": [{
+			"title": "Vuln Title Here",
+			"created_at": "2018-02-05T16:50:40.000Z",
+			"updated_at": "2018-02-08T08:18:56.000Z",
+			"vuln_type": "DOS",
+			"references": {
+				"url": [
+					"https://linktoinfoonyourvuln.thanksto.wpvulndbdotcom"
+				],
+				"cve": [
+					"2018-1234"
+				]
+			},
+			"published_date": "2018-02-05T00:00:00.000Z",
+			"fixed_in": null,
+			"id": 9021
+		}]
+	}
+	"plugins": {
+		"Megaplugin For Extra Frop": {
+			"pluginstatus": "inactive",
+			"wpvulndb": {
+				"popular": true,
+				"vulnerabilities": [{
+					"vulnerablestatus": false,
+					"title": "Some Plugin (XSS)",
+					"created_at": "2015-10-13T21:22:12.000Z",
+					"updated_at": "2015-10-15T13:58:43.000Z",
+					"vuln_type": "XSS",
+					"references": {
+						"url": [
+							"http://blog.asdf.com/asdf/"
+						]
+					},
+					"published_date": "2015-10-13T00:00:00.000Z",
+					"fixed_in": "1.2.4",
+					"id": 8215
+				}],
+				"last_updated": "2018-06-19T18:18:00.000Z",
+				"latest_version": "4.5.6"
+			},
+			"version": "1.2.3",
+			"pluginpath": "path/file.php"
+		}
+	}
+}
+```
+
+
+
 
 ## Future Roadmap 
 

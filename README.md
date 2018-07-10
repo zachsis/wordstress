@@ -57,7 +57,7 @@ pip install BeautifulSoup4
 					"https://thehackernews.com/..."
 				],
 				"cve": [
-					"2018-6389"
+					"2000-123"
 				]
 			},
 			"published_date": "2017-02-05T00:00:00.000Z",
@@ -80,12 +80,12 @@ pip install BeautifulSoup4
 					"https://linktoinfoonyourvuln.thanksto.wpvulndbdotcom"
 				],
 				"cve": [
-					"2018-1234"
+					"123-1234"
 				]
 			},
 			"published_date": "2018-02-05T00:00:00.000Z",
 			"fixed_in": null,
-			"id": 9021
+			"id": 1234
 		}]
 	}
 	"plugins": {
@@ -106,10 +106,10 @@ pip install BeautifulSoup4
 					},
 					"published_date": "2015-10-13T00:00:00.000Z",
 					"fixed_in": "1.2.4",
-					"id": 8215
+					"id": 1233
 				}],
 				"last_updated": "2018-06-19T18:18:00.000Z",
-				"latest_version": "4.5.6"
+				"latest_version": "1.2.44"
 			},
 			"version": "1.2.3",
 			"pluginpath": "path/file.php"

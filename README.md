@@ -1,6 +1,6 @@
 # wordstress
 
-Wordstress is an opensource whitebox security scanner for wordpress powered websites. T
+Wordstress is an opensource whitebox security scanner for wordpress powered websites. 
 
 ## Description
 
@@ -29,9 +29,8 @@ wordpress](https://wordpress.org/plugins/wordstress/) you must:
 
 ### wordstress Install
 
-Clone this repo and install all of the prereqs. Written for python2.7+ 
+Clone this repo and install all of the prereqs. Configure settings in `./conf/`  Written for python2.7+ 
 ```
-
 pip install requests
 pip install BeautifulSoup4
 ```

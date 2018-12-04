@@ -29,7 +29,7 @@ wordpress](https://wordpress.org/plugins/wordstress/) you must:
 
 ### wordstress Install
 
-Clone this repo and install all of the prereqs. Configure settings in `./conf/`  Written for python2.7+ 
+Clone this repo and install all of the prereqs. Configure settings in `./conf/` . Written for python 3
 ```
 pip install requests
 pip install BeautifulSoup4

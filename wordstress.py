@@ -1,31 +1,36 @@
-from libs import WPVulnDBLookup
+from libs import GetConfig
 from libs import SplunkHTTPEventCollector
-import ConfigParser
-import os
+from libs import WPVulnDBLookup
 
 
-def main():
-    ConfigParser.SafeConfigParser()
-    settings = ConfigParser.SafeConfigParser()
-    settings.read('{}/conf/settings.conf'.format(os.getcwd()))
-    sites = ConfigParser.SafeConfigParser()
-    sites.read('{}/conf/sites.conf'.format(os.getcwd()))
+class Run(GetConfig):
+    def __init__(self):
+        super(Run, self).__init__()
 
-    hecurl = settings.get(section="splunk", option="splunkurl")
-    hectoken = settings.get(section="splunk", option="token")
-    sourcetype = settings.get(section="splunk", option="sourcetype")
+    def main(self):
+        for s in self.sites.sections():
+            try:
+                configdict = dict(self.sites.items(s))
+                site = WPVulnDBLookup(_url=configdict['url'], _wordstresskey=configdict['key'])
+                print(site.fullurl)
+                myevent = site.fullvulnlookup()
+            except Exception as E:
+                self.log.critical(
+                    'ERROR WITH SITE {}/wordstress/?wordstress-key={}'.format(configdict['url'], configdict['key']))
+                pass
 
-    for s in sites.sections():
-        configdict = dict(sites.items(s))
-        print configdict['url']
-        site = WPVulnDBLookup(_url=configdict['url'], _wordstresskey=configdict['key'])
-
-        print site.fullurl
-        myevent = site.fullvulnlookup()
-        print SplunkHTTPEventCollector.eventpost(splunkurl=hecurl,
-                                                 token=hectoken,
-                                                 sourcetype=sourcetype,
-                                                 event=myevent)
+            try:
+                splunkresponse = (SplunkHTTPEventCollector.eventpost(splunkurl=self.hecurl,
+                                                                     token=self.hectoken,
+                                                                     event=myevent,
+                                                                     sourcetype=self.sourcetype))
+                self.log.info("Splunk HEC Response: {}".format(splunkresponse))
+            except Exception as E:
+                self.log.critical('Unable to POST to splunk HEC!')
+                pass
 
 
-main()
+r = Run()
+
+if __name__ == '__main__':
+    r.main()

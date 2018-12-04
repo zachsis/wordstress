@@ -1,7 +1,8 @@
-from libs import WordstressScraper
-from pkg_resources import parse_version
-import requests
 import json
+import requests
+
+from pkg_resources import parse_version
+from libs import WordstressScraper
 
 
 class WPVulnDBLookup(WordstressScraper):
@@ -35,16 +36,14 @@ class WPVulnDBLookup(WordstressScraper):
 
             for vuln in self.vulndbjson[self.wpcoreversion]["vulnerabilities"]:
                 try:
-                    if WPVulnDBLookup.versioncheck(_curver=self.wpcoreversion, _fixed_in=vuln["fixed_in"]):
+                    if self.versioncheck(_curver=self.wpcoreversion, _fixed_in=vuln["fixed_in"]):
                         self.jsonout["wp_version"]["vulnerabilities"].append(vuln)
                         self.jsonout["confirmed_vulns"]["coreversion"].append(vuln)
                 except Exception as E:
-                    print E
-                    # self.jsonout["wp_version"]["vulnerror"] = vuln
-                    # self.jsonout["wp_version"]["vulnerror"]["errors"] = str(E)
+                    self.log.error('Error somewhere in corelookup(). {}'.format(E))
                     continue
         except Exception as E:
-            print E
+            self.log.error('Error somewhere in corelookup(). {}'.format(E))
             pass
         return self.jsonout["wp_version"]
 
@@ -67,58 +66,69 @@ class WPVulnDBLookup(WordstressScraper):
         :return: 
         """
 
-        for inventory_key, inventory_val in self.jsonout["plugins"].iteritems():
+        for inventory_key, inventory_val in self.jsonout["plugins"].items():
             self.jsonout["plugins"][inventory_key]["wpvulndb"] = {}
             plg = inventory_val["pluginpath"].split("/")
             if len(plg) == 2:
                 self.plugindirname = plg[0]
                 self.pluginfilename = plg[1]
-            self.fullurl = '{}/plugins/{}'.format(self.wpvulndbbaseurl, self.plugindirname)
+                self.fullurl = '{}/plugins/{}'.format(self.wpvulndbbaseurl, self.plugindirname)
+                self.log.info('attempting to pull from wpvulndb: {}'.format(self.fullurl))
+            if len(plg) == 1:
+                self.pluginfilename = inventory_key.replace(' ', '-')
+                self.fullurl = '{}/plugins/{}'.format(self.wpvulndbbaseurl, self.pluginfilename)
+                self.log.warning(
+                    'something funky with this plugin. Likely only has a filename to go off of.: {}'.format(
+                        self.fullurl))
+
             self.pullvulndata()
+            if self.r.status_code == 404:
+                try:
+                    self.fullurl = '{}/plugins/{}'.format(self.wpvulndbbaseurl, self.pluginfilename[:-4])
+                    self.pullvulndata()
+                    for wpvdb_key, wpvdb_val in json.loads(self.r.text).items():
+                        self.jsonout["plugins"][inventory_key]["wpvulndb"] = wpvdb_val
+                except Exception as E:
+                    self.log.error(
+                        'plugin=\"{}\" function=\"pluginlookup()\" wpvulndbstatuscode=\"{}\" exception=\"{}\" ' \
+                        'msg=\"Prob couldnt find by pluginfilename. \"'.format(
+                            self.pluginfilename,
+                            self.r.status_code, E))
+                    continue
             try:
-                for wpvdb_key, wpvdb_val in json.loads(self.r.text).iteritems():
+                for wpvdb_key, wpvdb_val in json.loads(self.r.text).items():
                     self.jsonout["plugins"][inventory_key]["wpvulndb"] = wpvdb_val
                     if wpvdb_val["vulnerabilities"]:
                         for vuln in self.jsonout["plugins"][inventory_key]["wpvulndb"]["vulnerabilities"]:
-                            if WPVulnDBLookup.versioncheck(_curver=inventory_val["version"],
-                                                           _fixed_in=vuln["fixed_in"]):
+                            if self.versioncheck(_curver=inventory_val["version"],
+                                                 _fixed_in=vuln["fixed_in"],
+                                                 _name=inventory_key):
                                 vuln["vulnerablestatus"] = True
                                 self.jsonout['confirmed_vulns']['plugins'].append(vuln)
                             else:
                                 vuln["vulnerablestatus"] = False
                     else:
+                        self.log.info('No vulns found on wpvulndb for {}. skipping'.format(self.r.url))
                         self.jsonout["plugins"][inventory_key]["wpvulndb"] = wpvdb_val
-            except Exception as E:
-                # self.jsonout["plugins"][inventory_key]["wpvulndb"]["exception"] = str(E)
-                # self.jsonout["plugins"][inventory_key]["wpvulndb"]["url"] = self.r.url
-                # self.jsonout["plugins"][inventory_key]["wpvulndb"]["status_code"] = self.r.status_code
-                print "{} : {}".format(self.jsonout["plugins"][inventory_key], str(E))
-                continue
-            if self.r.status_code == 404:
-                try:
-                    self.fullurl = '{}/plugins/{}'.format(self.wpvulndbbaseurl, self.pluginfilename[:-4])
-                    self.pullvulndata()
-                    for wpvdb_key, wpvdb_val in json.loads(self.r.text).iteritems():
-                        self.jsonout["plugins"][inventory_key]["wpvulndb"] = wpvdb_val
-                except Exception as E:
-                    # self.jsonout["plugins"][inventory_key]["wpvulndb"]["exception"] = str(E)
-                    # self.jsonout["plugins"][inventory_key]["wpvulndb"]["url"] = self.r.url
-                    # self.jsonout["plugins"][inventory_key]["wpvulndb"]["status_code"] = self.r.status_code
-                    print "{} : {}".format(self.jsonout["plugins"][inventory_key], str(E))
-                    continue
 
+            except Exception as E:
+                self.log.error(
+                    'plugin=\"{}\" function=\"pluginlookup()\" wpvulndbstatuscode=\"{}\" exception=\"{}\" ' \
+                    'msg=\"Prob couldnt find by plugindirname.\"'.format(
+                        self.plugindirname,
+                        self.r.status_code, E))
+                continue
         return self.jsonout["plugins"]
 
-    @classmethod
-    def versioncheck(cls, _curver, _fixed_in):
+    def versioncheck(self, _curver, _fixed_in, _name='None'):
         if _fixed_in is None:
-            # version is vulnerable
+            self.log.info('{} is vulnerable. _curver: {} _fixed_in: {}'.format(_name, _curver, _fixed_in))
             return True
         if parse_version(_curver) < parse_version(_fixed_in):
-            # version is vulnerable
+            self.log.info('{} is vulnerable. _curver: {} _fixed_in: {}'.format(_name, _curver, _fixed_in))
             return True
         else:
-            # version is not vulnerable
+            self.log.info('{} is NOT vulnerable. _curver: {} _fixed_in: {}'.format(_name, _curver, _fixed_in))
             return False
 
     def themelookup(self):
@@ -142,12 +152,12 @@ class WPVulnDBLookup(WordstressScraper):
                 from time import sleep
                 sleep(5)
             if self.r.status_code != 200 and self.r.status_code != 404:
-                print self.r.status_code
-                print self.r.content
+                print(self.r.status_code)
+                print(self.r.content)
             if count == 10:
-                print 'something is funky with wpvulndb. tried 10 times'
-        except requests.HTTPError as e:
-            print "{}: something went wrong pulling vulndata from wpvulndb".format(str(e))
+                self.log.critical('something is funky with wpvulndb. tried 10 times and Failed')
+        except requests.HTTPError as E:
+            self.log.error('Error somewhere in pullvulndata(). {}'.format(E))
             pass
 
     def fullvulnlookup(self):

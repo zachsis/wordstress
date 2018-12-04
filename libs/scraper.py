@@ -1,17 +1,13 @@
-try:
-    import requests
-except:
-    print "[!] please install 'requests' python module: (pip install requests)"
-try:
-    import bs4
-except:
-    print "[!] please install 'requests' python module: (pip install beautifulsoup4)"
-
+import requests
+import bs4
 import re
 
+from libs.getconfig import GetConfig
 
-class WordstressScraper(object):
+
+class WordstressScraper(GetConfig):
     def __init__(self, _wordstresskey, _url):
+        super(WordstressScraper, self).__init__()
         self.wordstresskey = _wordstresskey
         self.url = _url
         self.site = re.sub(r'http(s)?://', '', self.url)
@@ -51,17 +47,17 @@ class WordstressScraper(object):
                 self.r = requests.get(url=self.fullurl, verify=False)
             except requests.exceptions.RequestException as e:
                 if isinstance(e, requests.exceptions.SSLError):
-                    print e
+                    self.log.error(e)
                     break
                 else:
                     retries += 1
-                    print str(e)
+                    self.log.error(e)
                     continue
             break
         try:
             self.page = self.r.text
         except AttributeError as E:
-            print '{}: wasnt able to pull the wordstress page from {}'.format(E, self.fullurl)
+            self.log.critical('{}: wasnt able to pull the wordstress page from {}'.format(E, self.fullurl))
         return self.page
 
     def ifpage(self):
@@ -74,18 +70,26 @@ class WordstressScraper(object):
         :returns: wordpress version string object
         """
         self.ifpage()
-        self.soup = bs4.BeautifulSoup(self.page, "html.parser")
-        self.wpcoreversion = self.soup.find(id="wp_version").text
-        self.jsonout["wp_version"]["version"] = self.wpcoreversion
-        return self.wpcoreversion
+        try:
+            self.soup = bs4.BeautifulSoup(self.page, "html.parser")
+            self.wpcoreversion = self.soup.find(id="wp_version").text
+            self.jsonout["wp_version"]["version"] = self.wpcoreversion
+            return self.wpcoreversion
+        except Exception as E:
+            self.log.error('Something puked with beautifulsoup in getwpversion() {}'.format(E))
+            pass
 
     def getplugins(self):
         """
         :returns plugin list object 
         """
         self.ifpage()
-        self.soup = bs4.BeautifulSoup(self.page, "html.parser")
-        self.pluginlist = self.soup.findAll(id='all_plugin')
+        try:
+            self.soup = bs4.BeautifulSoup(self.page, "html.parser")
+            self.pluginlist = self.soup.findAll(id='all_plugin')
+        except Exception as E:
+            self.log.error('Something puked with beautifulsoup in getplugins() {}'.format(E))
+            pass
         for plugin in self.pluginlist:
             perpluginlist = plugin.contents[0].split(',')
             self.pluginname = ''.join(perpluginlist[:-3])  # this handles pluginnames with commas

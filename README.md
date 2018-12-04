@@ -35,7 +35,7 @@ pip install requests
 pip install BeautifulSoup4
 ```
 
-### Splunk HTTP Event Collecto
+### Splunk HTTP Event Collector
 
 A Splunk HTTP Event collector is needed to POST data to. For more info please see http://dev.splunk.com/view/event-collector/SP-CAAAE7F 
 
